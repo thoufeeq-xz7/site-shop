@@ -1,0 +1,134 @@
+{% extends 'store/base.html' %}
+
+{% block title %}Add Product | StupUp{% endblock %}
+
+{% block content %}
+<section class="space-y-6">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+            <p class="text-sm font-semibold uppercase tracking-[0.28em] text-slate-500">Admin product form</p>
+            <h1 class="mt-2 text-4xl font-semibold tracking-tight text-slate-950">Add a new product</h1>
+        </div>
+        <div class="flex flex-wrap gap-3">
+            <a href="{% url 'admin_dashboard' %}" class="btn-outline">Dashboard</a>
+            <a href="{% url 'admin_product_list' %}" class="btn-outline">Back to Products</a>
+        </div>
+    </div>
+
+    <div class="grid gap-8 lg:grid-cols-[1fr_0.9fr]">
+        <div class="card-panel px-6 py-7 sm:px-8">
+            <form method="post" enctype="multipart/form-data" class="space-y-5">
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                    <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+                <div>
+                    <label for="{{ form.name.id_for_label }}" class="form-label">Product name</label>
+                    {{ form.name }}
+                    {% if form.name.errors %}
+                        <p class="mt-2 text-sm text-rose-600">{{ form.name.errors|join:', ' }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.category.id_for_label }}" class="form-label">Category</label>
+                    {{ form.category }}
+                    {% if form.category.errors %}
+                        <p class="mt-2 text-sm text-rose-600">{{ form.category.errors|join:', ' }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.price.id_for_label }}" class="form-label">Price (Rs.)</label>
+                    {{ form.price }}
+                    {% if form.price.errors %}
+                        <p class="mt-2 text-sm text-rose-600">{{ form.price.errors|join:', ' }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                        <p class="mt-2 text-sm text-rose-600">{{ form.description.errors|join:', ' }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.image.id_for_label }}" class="form-label">Legacy cover image</label>
+                    {{ form.image }}
+                    <p class="mt-2 text-xs text-slate-500">Kept for backward compatibility when no gallery images exist.</p>
+                </div>
+                <div>
+                    <label class="form-label">Gallery images</label>
+                    <div id="drop-zone" class="rounded-[1.75rem] border border-dashed border-slate-300 bg-stone-50 px-6 py-10 text-center">
+                        <input id="gallery-input" type="file" name="images" multiple class="hidden">
+                        <p class="text-lg font-semibold text-slate-950">Drag and drop product photos here</p>
+                        <p class="mt-2 text-sm text-slate-600">or click below to select multiple files</p>
+                        <button id="pick-files" type="button" class="btn-outline mt-5">Choose Images</button>
+                        <div id="file-list" class="mt-5 text-sm text-slate-500">No gallery images selected.</div>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary w-full">Create Product</button>
+            </form>
+        </div>
+
+        <div class="space-y-6">
+            <div class="card-panel bg-slate-950 px-6 py-7 text-white sm:px-8">
+                <p class="text-sm uppercase tracking-[0.28em] text-slate-300">Image flow</p>
+                <div class="mt-5 space-y-4 text-sm text-slate-200">
+                    <div class="rounded-2xl bg-white/10 p-4">Upload multiple photos in one pass.</div>
+                    <div class="rounded-2xl bg-white/10 p-4">The first gallery upload becomes the primary image automatically.</div>
+                    <div class="rounded-2xl bg-white/10 p-4">Unused files can be cleaned later with the management command.</div>
+                </div>
+            </div>
+            <div class="card-panel px-6 py-7 sm:px-8">
+                <p class="text-sm font-semibold uppercase tracking-[0.28em] text-slate-500">Publishing checklist</p>
+                <div class="mt-5 space-y-3 text-sm leading-6 text-slate-600">
+                    <p>Use a clear product name and category so filtering works well on the storefront.</p>
+                    <p>Keep descriptions specific and scannable to improve the detail page.</p>
+                    <p>Add a legacy cover image only if you need compatibility with older data flows.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const galleryInput = document.getElementById('gallery-input');
+    const dropZone = document.getElementById('drop-zone');
+    const fileList = document.getElementById('file-list');
+    const pickFiles = document.getElementById('pick-files');
+
+    const renderFileList = (files) => {
+        if (!files.length) {
+            fileList.textContent = 'No gallery images selected.';
+            return;
+        }
+
+        fileList.innerHTML = Array.from(files).map((file) => `<div>${file.name}</div>`).join('');
+    };
+
+    pickFiles.addEventListener('click', () => galleryInput.click());
+    galleryInput.addEventListener('change', () => renderFileList(galleryInput.files));
+
+    ['dragenter', 'dragover'].forEach((eventName) => {
+        dropZone.addEventListener(eventName, (event) => {
+            event.preventDefault();
+            dropZone.classList.add('border-slate-900', 'bg-white');
+        });
+    });
+
+    ['dragleave', 'drop'].forEach((eventName) => {
+        dropZone.addEventListener(eventName, (event) => {
+            event.preventDefault();
+            dropZone.classList.remove('border-slate-900', 'bg-white');
+        });
+    });
+
+    dropZone.addEventListener('drop', (event) => {
+        galleryInput.files = event.dataTransfer.files;
+        renderFileList(galleryInput.files);
+    });
+</script>
+{% endblock %}

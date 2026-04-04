@@ -1,0 +1,113 @@
+{% extends 'store/base.html' %}
+
+{% block title %}StupUp | Home{% endblock %}
+
+{% block content %}
+
+<!-- Quick filters -->
+<section class="mb-10">
+    <div class="mx-auto max-w-7xl rounded-[2rem] border border-slate-200 bg-white p-6 shadow-soft sm:p-8">
+        <h2 class="text-lg font-semibold text-slate-900">Find the right product</h2>
+        <form method="get" class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div>
+                <label for="q" class="form-label">Search</label>
+                <input id="q" type="text" name="q" value="{{ search }}" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200" placeholder="Search by name or description">
+            </div>
+            <div>
+                <label for="category" class="form-label">Category</label>
+                <select id="category" name="category" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200">
+                    <option value="">All categories</option>
+                    {% for category in categories %}
+                        <option value="{{ category }}" {% if category == selected_category %}selected{% endif %}>{{ category }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn-primary sm:self-end">Apply filters</button>
+        </form>
+    </div>
+</section>
+
+<!-- Product cards -->
+<section id="catalogue" class="mb-12">
+    <div class="mx-auto max-w-7xl">
+        <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+            <div>
+                <p class="text-sm font-semibold uppercase tracking-[0.28em] text-slate-500">Catalogue</p>
+                <h2 class="mt-1 text-3xl font-semibold tracking-tight text-slate-950">Featured products</h2>
+            </div>
+            <p class="text-sm text-slate-500">{{ products|length }} product{{ products|length|pluralize }}</p>
+        </div>
+
+        {% if products %}
+            <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                {% for product in products %}
+                    <article class="card-panel overflow-hidden">
+                        <a href="{{ product.get_absolute_url }}" class="block">
+                            {% if product.primary_image_url %}
+                                <img src="{{ product.primary_image_url }}" alt="{{ product.name }}" class="h-64 w-full object-cover">
+                            {% else %}
+                                <div class="flex h-64 items-center justify-center bg-gradient-to-br from-slate-200 to-stone-100 text-sm font-semibold uppercase tracking-[0.3em] text-slate-500">No Image</div>
+                            {% endif %}
+                        </a>
+                        <div class="space-y-4 px-6 py-6">
+                            <div class="flex items-start justify-between gap-4">
+                                <div>
+                                    <p class="text-xs font-semibold uppercase tracking-[0.26em] text-slate-500">{{ product.category }}</p>
+                                    <h3 class="mt-2 text-xl font-semibold tracking-tight text-slate-950">{{ product.name }}</h3>
+                                </div>
+                                <p class="text-sm font-semibold text-slate-950">{{ product.formatted_price }}</p>
+                            </div>
+                            <p class="line-clamp-3 text-sm leading-6 text-slate-600">{{ product.description }}</p>
+                            <div class="flex flex-wrap gap-3">
+                                <a href="{{ product.get_absolute_url }}" class="btn-outline">View Details</a>
+                                <form method="post" action="{% url 'add_to_cart' product.pk %}" class="inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                    <button type="submit" class="btn-primary">Add to Cart</button>
+                                </form>
+                            </div>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="card-panel px-6 py-12 text-center">
+                <h3 class="text-2xl font-semibold tracking-tight text-slate-950">No products matched your filters.</h3>
+                <p class="mt-3 text-sm text-slate-600">Use search or category selection to find items, or clear filters to view everything.</p>
+                <a href="{% url 'home' %}" class="btn-primary mt-6">Reset filters</a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Why StupUp -->
+<section class="mb-12">
+    <div class="mx-auto max-w-7xl">
+        <div class="grid gap-5 md:grid-cols-3">
+            <div class="card-panel p-6">
+                <h3 class="text-lg font-semibold text-slate-900">1. Easy cart</h3>
+                <p class="mt-2 text-sm text-slate-600">Add items in one click, keep them in session, and continue browsing uninterrupted.</p>
+            </div>
+            <div class="card-panel p-6">
+                <h3 class="text-lg font-semibold text-slate-900">2. Human checkout</h3>
+                <p class="mt-2 text-sm text-slate-600">Checkout uses WhatsApp with a ready-made order summary for fast personalized support.</p>
+            </div>
+            <div class="card-panel p-6">
+                <h3 class="text-lg font-semibold text-slate-900">3. Live follow-ups</h3>
+                <p class="mt-2 text-sm text-slate-600">You get confirmation and shipping details from a real person after order placement.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to action -->
+<section class="mb-12 rounded-[2rem] border border-slate-200 bg-white p-8 text-center shadow-soft">
+    <h2 class="text-3xl font-semibold text-slate-900">Ready to shop?</h2>
+    <p class="mt-3 text-base text-slate-600">Add products to your cart now, then complete your order with ease.</p>
+    <div class="mt-6 flex flex-wrap justify-center gap-3">
+        <a href="#catalogue" class="btn-primary">Start shopping</a>
+        <a href="{% url 'checkout' %}" class="btn-secondary">Go to checkout</a>
+    </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends 'store/base.html' %}
+
+{% block title %}Contact Us | StupUp{% endblock %}
+
+{% block content %}
+<section class="grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
+    <div class="space-y-6">
+        <div class="card-panel bg-slate-950 px-6 py-7 text-white sm:px-8">
+            <p class="text-sm uppercase tracking-[0.28em] text-slate-300">Contact</p>
+            <h1 class="mt-3 text-3xl font-semibold tracking-tight">Questions, requests, or custom buying help.</h1>
+            <p class="mt-4 text-sm leading-7 text-slate-300">Reach out for product questions, delivery details, stock checks, or gifting support. We are here to help you decide quickly and confidently.</p>
+        </div>
+        <div class="card-panel px-6 py-7 sm:px-8">
+            <p class="text-sm font-semibold uppercase tracking-[0.28em] text-slate-500">FAQ</p>
+            <div class="mt-5 space-y-4">
+                <div class="rounded-[1.5rem] border border-slate-200 p-4">
+                    <h2 class="font-semibold text-slate-950">How do orders work?</h2>
+                    <p class="mt-2 text-sm leading-6 text-slate-600">Add products to your cart, complete checkout, and we will prepare a WhatsApp message with your full order details.</p>
+                </div>
+                <div class="rounded-[1.5rem] border border-slate-200 p-4">
+                    <h2 class="font-semibold text-slate-950">Can I ask about stock before ordering?</h2>
+                    <p class="mt-2 text-sm leading-6 text-slate-600">Yes. Send us the product name or link and we will confirm availability and lead time.</p>
+                </div>
+                <div class="rounded-[1.5rem] border border-slate-200 p-4">
+                    <h2 class="font-semibold text-slate-950">Do you help with bulk or gift orders?</h2>
+                    <p class="mt-2 text-sm leading-6 text-slate-600">Absolutely. Use the form with your requirements and we will follow up with options.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-panel px-6 py-7 sm:px-8">
+        <p class="text-sm font-semibold uppercase tracking-[0.28em] text-slate-500">Send a message</p>
+        <form method="post" class="mt-6 space-y-5">
+            {% csrf_token %}
+            <div>
+                <label for="{{ form.name.id_for_label }}" class="form-label">Name</label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                    <p class="mt-2 text-sm text-rose-600">{{ form.name.errors|join:', ' }}</p>
+                {% endif %}
+            </div>
+            <div>
+                <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                    <p class="mt-2 text-sm text-rose-600">{{ form.email.errors|join:', ' }}</p>
+                {% endif %}
+            </div>
+            <div>
+                <label for="{{ form.phone.id_for_label }}" class="form-label">Phone</label>
+                {{ form.phone }}
+                {% if form.phone.errors %}
+                    <p class="mt-2 text-sm text-rose-600">{{ form.phone.errors|join:', ' }}</p>
+                {% endif %}
+            </div>
+            <div>
+                <label for="{{ form.message.id_for_label }}" class="form-label">Message</label>
+                {{ form.message }}
+                {% if form.message.errors %}
+                    <p class="mt-2 text-sm text-rose-600">{{ form.message.errors|join:', ' }}</p>
+                {% endif %}
+            </div>
+            <button type="submit" class="btn-primary w-full">Send Inquiry</button>
+        </form>
+    </div>
+</section>
+{% endblock %}

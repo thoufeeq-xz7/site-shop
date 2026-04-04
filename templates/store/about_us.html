@@ -1,0 +1,33 @@
+{% extends 'store/base.html' %}
+
+{% block title %}About Us | StupUp{% endblock %}
+
+{% block content %}
+<section class="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+    <div class="card-panel px-6 py-8 sm:px-10">
+        <p class="text-sm font-semibold uppercase tracking-[0.28em] text-slate-500">About StupUp</p>
+        <h1 class="mt-3 text-4xl font-semibold tracking-tight text-slate-950">A product brand built around clarity, warmth, and sharp detail.</h1>
+        <div class="mt-6 space-y-5 text-sm leading-7 text-slate-600">
+            <p>StupUp began with a simple idea: online shopping should feel curated, not chaotic. We focus on a clean catalogue, premium presentation, and direct customer support when it matters most.</p>
+            <p>Our storefront is designed to make products easy to discover and confidence easy to build. Every page is intentional, every visual detail is meant to reduce friction, and every completed cart moves into a human-first WhatsApp order flow.</p>
+            <p>We care about minimal design, honest communication, and a shopping experience that feels polished from the first click to final confirmation.</p>
+        </div>
+    </div>
+    <div class="grid gap-6">
+        <div class="card-panel bg-slate-950 px-6 py-7 text-white">
+            <p class="text-sm uppercase tracking-[0.28em] text-slate-300">Values</p>
+            <div class="mt-5 space-y-4 text-sm text-slate-200">
+                <div class="rounded-2xl bg-white/10 p-4">Thoughtful product curation over overcrowded shelves.</div>
+                <div class="rounded-2xl bg-white/10 p-4">Fast, friendly support through direct conversations.</div>
+                <div class="rounded-2xl bg-white/10 p-4">Storefront experiences that feel editorial and trustworthy.</div>
+            </div>
+        </div>
+        <div class="card-panel px-6 py-7">
+            <p class="text-sm uppercase tracking-[0.28em] text-slate-500">Next step</p>
+            <h2 class="mt-3 text-2xl font-semibold tracking-tight text-slate-950">Browse the latest collection.</h2>
+            <p class="mt-3 text-sm leading-6 text-slate-600">Explore the catalogue, shortlist what you love, and let the checkout flow package everything neatly for WhatsApp.</p>
+            <a href="{% url 'home' %}" class="btn-primary mt-5">Go to Shop</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

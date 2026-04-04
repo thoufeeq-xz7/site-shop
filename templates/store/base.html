@@ -1,0 +1,148 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}StupUp{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Sora', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        soft: '0 20px 60px rgba(15, 23, 42, 0.08)',
+                    },
+                },
+            },
+        };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style type="text/tailwindcss">
+        @layer base {
+            body {
+                @apply bg-stone-50 text-slate-900 font-sans;
+                background-image:
+                    radial-gradient(circle at top left, rgba(0, 0, 0, 0.05), transparent 32%),
+                    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(241, 245, 249, 0.92));
+            }
+        }
+
+        @layer components {
+            .btn-primary {
+                @apply inline-flex items-center justify-center rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-slate-800;
+            }
+
+            .btn-secondary {
+                @apply inline-flex items-center justify-center rounded-full bg-amber-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:-translate-y-0.5 hover:bg-amber-300;
+            }
+
+            .btn-outline {
+                @apply inline-flex items-center justify-center rounded-full border border-slate-300 bg-white/90 px-5 py-3 text-sm font-semibold text-slate-900 transition hover:-translate-y-0.5 hover:border-slate-900;
+            }
+
+            .card-panel {
+                @apply rounded-[2rem] border border-white/70 bg-white/80 shadow-soft backdrop-blur;
+            }
+
+            .form-label {
+                @apply mb-2 block text-sm font-semibold text-slate-800;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <header class="sticky top-0 z-40 pt-4">
+            <nav class="card-panel flex items-center justify-between px-5 py-4">
+                <a href="{% url 'home' %}" class="flex items-center gap-3">
+                    <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-sm font-bold uppercase tracking-[0.35em] text-white">SU</span>
+                    <div>
+                        <p class="text-lg font-semibold tracking-tight">StupUp</p>
+                        <p class="text-xs uppercase tracking-[0.28em] text-slate-500">Modern Commerce</p>
+                    </div>
+                </a>
+                <button id="menu-toggle" class="rounded-full border border-slate-200 p-2 text-slate-700 md:hidden">
+                    <span class="sr-only">Open menu</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+                <div class="hidden items-center gap-3 md:flex">
+                    <a href="{% url 'home' %}" class="rounded-full px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100">Shop</a>
+
+                    <a href="{% url 'checkout' %}" class="btn-outline gap-2">
+                        Cart
+                        <span class="rounded-full bg-slate-950 px-2 py-0.5 text-xs text-white">{{ cart_item_count }}</span>
+                    </a>
+                    {% if request.user.is_authenticated %}
+                        <a href="{% url 'logout' %}" class="btn-primary">Logout</a>
+                    {% else %}
+                        <a href="{% url 'login' %}?next={% url 'checkout' %}" class="btn-outline">Login</a>
+                        <a href="{% url 'register' %}" class="btn-primary">Register</a>
+                    {% endif %}
+                    {% if request.user.is_staff or request.user.is_superuser %}
+                        <a href="{% url 'admin_dashboard' %}" class="rounded-full px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100">Admin</a>
+                    {% endif %}
+                </div>
+            </nav>
+            <div id="mobile-menu" class="card-panel mt-3 hidden px-4 py-4 md:hidden">
+                <div class="flex flex-col gap-2">
+                    <a href="{% url 'home' %}" class="rounded-2xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100">Shop</a>
+                    {% if request.user.is_staff or request.user.is_superuser %}
+                        <a href="{% url 'admin_dashboard' %}" class="rounded-2xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100">Admin</a>
+                    {% endif %}
+                    <a href="{% url 'checkout' %}" class="rounded-2xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100">Cart ({{ cart_item_count }})</a>
+                    {% if request.user.is_authenticated %}
+                        <a href="{% url 'logout' %}" class="btn-primary mt-2">Logout</a>
+                    {% else %}
+                        <a href="{% url 'login' %}?next={% url 'checkout' %}" class="btn-outline mt-2">Login</a>
+                        <a href="{% url 'register' %}" class="btn-primary">Register</a>
+                    {% endif %}
+                </div>
+            </div>
+        </header>
+
+        {% if messages %}
+            <div class="mt-6 space-y-3">
+                {% for message in messages %}
+                    <div class="card-panel flex items-start justify-between gap-4 border-l-4 border-l-amber-400 px-5 py-4 text-sm text-slate-700">
+                        <p>{{ message }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <main class="pb-16 pt-8">
+            {% block content %}{% endblock %}
+        </main>
+
+        <footer class="mt-12 border-t border-slate-200 pt-8 pb-6 text-sm text-slate-600">
+            <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+                <p>© {{ now|date:'Y' }} StupUp. All rights reserved.</p>
+                <div class="flex flex-wrap gap-3">
+                    <a href="{% url 'about' %}" class="text-slate-700 hover:text-slate-950">About Us</a>
+                    <a href="{% url 'contact' %}" class="text-slate-700 hover:text-slate-950">Contact Us</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        const menuToggle = document.getElementById('menu-toggle');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        if (menuToggle && mobileMenu) {
+            menuToggle.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+        }
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
