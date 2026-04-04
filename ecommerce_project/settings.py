@@ -17,6 +17,8 @@ ALLOWED_HOSTS = env.list(
     default=['stupup.onrender.com', '127.0.0.1', 'localhost']
 )
 
+CSRF_TRUSTED_ORIGINS = ['https://stupup.onrender.com']
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
