@@ -14,7 +14,7 @@ SECRET_KEY = env('SECRET_KEY', default='django-insecure-gsu687u554r(9kqkg6%9nrnm
 DEBUG = env('DEBUG')
 ALLOWED_HOSTS = env.list(
     'ALLOWED_HOSTS',
-    default=['stupup.onrender.com', '127.0.0.1', 'localhost']
+    default=['stupup.onrender.com', 'site-shop-bcqi3qubo-thoufeeq-xz7s-projects.vercel.app','127.0.0.1', 'localhost']
 )
 
 CSRF_TRUSTED_ORIGINS = ['https://stupup.onrender.com']
