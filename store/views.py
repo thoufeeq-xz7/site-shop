@@ -1,5 +1,6 @@
 from decimal import Decimal
 from functools import wraps
+import logging
 from urllib.parse import quote
 
 from django.conf import settings
@@ -7,6 +8,7 @@ from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
+from django.db import OperationalError, ProgrammingError
 from django.db.models import Count, Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -16,6 +18,8 @@ from django.views.decorators.http import require_GET, require_POST, require_safe
 
 from .forms import CheckoutForm, ContactForm, ProductForm, RegistrationForm, StyledAuthenticationForm
 from .models import Product, ProductImage
+
+logger = logging.getLogger(__name__)
 
 
 def admin_required(view_func):
@@ -143,13 +147,24 @@ def _build_whatsapp_order(items, subtotal, form):
 def home(request):
     search = request.GET.get('q', '').strip()
     selected_category = request.GET.get('category', '').strip()
-    products = Product.objects.prefetch_related('images')
-    categories = Product.objects.order_by('category').values_list('category', flat=True).distinct()
+    products = []
+    categories = []
+    catalog_available = True
 
-    if search:
-        products = products.filter(Q(name__icontains=search) | Q(description__icontains=search))
-    if selected_category:
-        products = products.filter(category__iexact=selected_category)
+    try:
+        product_queryset = Product.objects.prefetch_related('images')
+        category_queryset = Product.objects.order_by('category').values_list('category', flat=True).distinct()
+
+        if search:
+            product_queryset = product_queryset.filter(Q(name__icontains=search) | Q(description__icontains=search))
+        if selected_category:
+            product_queryset = product_queryset.filter(category__iexact=selected_category)
+
+        products = list(product_queryset)
+        categories = list(category_queryset)
+    except (OperationalError, ProgrammingError):
+        catalog_available = False
+        logger.exception('Unable to load catalogue data for the home page.')
 
     return render(
         request,
@@ -159,6 +174,7 @@ def home(request):
             'categories': categories,
             'selected_category': selected_category,
             'search': search,
+            'catalog_available': catalog_available,
         },
     )
 

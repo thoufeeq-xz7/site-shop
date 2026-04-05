@@ -1,3 +1,6 @@
+from unittest.mock import patch
+
+from django.db import OperationalError
 from django.test import TestCase
 from django.urls import reverse
 
@@ -37,3 +40,9 @@ class StoreRouteTests(TestCase):
             with self.subTest(route_name=route_name):
                 response = self.client.get(reverse(route_name))
                 self.assertEqual(response.status_code, 302)
+
+    @patch('store.views.Product.objects.prefetch_related', side_effect=OperationalError('db down'))
+    def test_home_page_still_renders_when_catalog_is_unavailable(self, _mock_prefetch_related):
+        response = self.client.get(reverse('home'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'catalogue is temporarily unavailable')
