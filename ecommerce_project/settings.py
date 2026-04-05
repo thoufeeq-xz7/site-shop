@@ -4,15 +4,16 @@ import environ
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-env = environ.Env(
-    DEBUG=(bool, False)
-)
+env = environ.Env()
 # Read .env file for local development (keep this file out of source control)
 env.read_env(os.path.join(BASE_DIR, '.env'))
 
 SECRET_KEY = env('SECRET_KEY', default='django-insecure-gsu687u554r(9kqkg6%9nrnm67%nd=%se_y9i*zrwxchf@94n!')
-DEBUG = env('DEBUG')
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['127.0.0.1', 'localhost', 'testserver'])
+DEBUG = env.bool('DEBUG', default=False)
+ALLOWED_HOSTS = env.list(
+    'ALLOWED_HOSTS',
+    default=['127.0.0.1', 'localhost', 'testserver', '.onrender.com'],
+)
 
 INSTALLED_APPS = [
     'django.contrib.admin',

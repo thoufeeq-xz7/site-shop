@@ -8,11 +8,11 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db.models import Count, Q
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
-from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.http import require_GET, require_POST, require_safe
 
 from .forms import CheckoutForm, ContactForm, ProductForm, RegistrationForm, StyledAuthenticationForm
 from .models import Product, ProductImage
@@ -139,7 +139,7 @@ def _build_whatsapp_order(items, subtotal, form):
     }
 
 
-@require_GET
+@require_safe
 def home(request):
     search = request.GET.get('q', '').strip()
     selected_category = request.GET.get('category', '').strip()
@@ -161,6 +161,11 @@ def home(request):
             'search': search,
         },
     )
+
+
+@require_safe
+def health_check(request):
+    return HttpResponse('ok', content_type='text/plain')
 
 
 def register_view(request):
