@@ -124,7 +124,7 @@
 
         <footer class="mt-12 border-t border-slate-200 pt-8 pb-6 text-sm text-slate-600">
             <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
-                <p>© {{ now|date:'Y' }} StupUp. All rights reserved.</p>
+                <p>&copy; {% now "Y" %} StupUp. All rights reserved.</p>
                 <div class="flex flex-wrap gap-3">
                     <a href="{% url 'about' %}" class="text-slate-700 hover:text-slate-950">About Us</a>
                     <a href="{% url 'contact' %}" class="text-slate-700 hover:text-slate-950">Contact Us</a>

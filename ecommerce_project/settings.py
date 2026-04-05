@@ -8,21 +8,37 @@ env = environ.Env()
 # Read .env file for local development (keep this file out of source control)
 env.read_env(os.path.join(BASE_DIR, '.env'))
 
+
+def _split_csv(value):
+    return [item.strip() for item in value.split(',') if item.strip()]
+
 SECRET_KEY = env('SECRET_KEY', default='django-insecure-gsu687u554r(9kqkg6%9nrnm67%nd=%se_y9i*zrwxchf@94n!')
 DEBUG = env.bool('DEBUG', default=False)
-ALLOWED_HOSTS = env.list(
-    'ALLOWED_HOSTS',
-    default=[
-        '127.0.0.1',
-        'localhost',
-        'testserver',
-        'site-shop-gamma.vercel.app',
-    ],
-)
-CSRF_TRUSTED_ORIGINS = [
+default_allowed_hosts = {
+    '127.0.0.1',
+    'localhost',
+    'testserver',
+    '.onrender.com',
+    'stupup.onrender.com',
+    'site-shop-gamma.vercel.app',
+    'site-shop-bcqi3qubo-thoufeeq-xz7s-projects.vercel.app',
+}
+configured_allowed_hosts = set(_split_csv(os.environ.get('ALLOWED_HOSTS', '')))
+deployment_hosts = {
+    host for host in (os.environ.get('VERCEL_URL'), os.environ.get('RENDER_EXTERNAL_HOSTNAME')) if host
+}
+ALLOWED_HOSTS = sorted(default_allowed_hosts | configured_allowed_hosts | deployment_hosts)
+
+default_csrf_trusted_origins = {
     'https://stupup.onrender.com',
     'https://site-shop-gamma.vercel.app',
-]
+    'https://site-shop-bcqi3qubo-thoufeeq-xz7s-projects.vercel.app',
+}
+configured_csrf_trusted_origins = set(_split_csv(os.environ.get('CSRF_TRUSTED_ORIGINS', '')))
+deployment_origins = {f'https://{host}' for host in deployment_hosts}
+CSRF_TRUSTED_ORIGINS = sorted(
+    default_csrf_trusted_origins | configured_csrf_trusted_origins | deployment_origins
+)
 
 
 INSTALLED_APPS = [
@@ -91,7 +107,7 @@ TIME_ZONE = 'Asia/Kolkata'
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
