@@ -17,6 +17,7 @@ ALLOWED_HOSTS = env.list(
         'localhost',
         'testserver',
         '.onrender.com',
+        'site-shop-gamma.vercel.app',
         'site-shop-bcqi3qubo-thoufeeq-xz7s-projects.vercel.app',
     ],
 )
