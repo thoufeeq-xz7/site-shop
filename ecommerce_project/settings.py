@@ -5,8 +5,10 @@ import environ
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 env = environ.Env()
-# Read .env file for local development (keep this file out of source control)
-env.read_env(os.path.join(BASE_DIR, '.env'))
+env_file = BASE_DIR / '.env'
+# Read .env file for local development when it exists.
+if env_file.exists():
+    env.read_env(env_file)
 
 
 def _split_csv(value):
