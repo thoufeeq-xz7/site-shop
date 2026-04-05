@@ -21,7 +21,11 @@ ALLOWED_HOSTS = env.list(
         'site-shop-bcqi3qubo-thoufeeq-xz7s-projects.vercel.app',
     ],
 )
-CSRF_TRUSTED_ORIGINS = ['https://stupup.onrender.com']
+CSRF_TRUSTED_ORIGINS = [
+    'https://stupup.onrender.com',
+    'https://site-shop-gamma.vercel.app',
+]
+
 
 INSTALLED_APPS = [
     'django.contrib.admin',
