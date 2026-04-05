@@ -16,9 +16,7 @@ ALLOWED_HOSTS = env.list(
         '127.0.0.1',
         'localhost',
         'testserver',
-        '.onrender.com',
         'site-shop-gamma.vercel.app',
-        'site-shop-bcqi3qubo-thoufeeq-xz7s-projects.vercel.app',
     ],
 )
 CSRF_TRUSTED_ORIGINS = [
