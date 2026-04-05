@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 import environ
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -84,6 +85,12 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'ecommerce_project.wsgi.application'
+
+database_url = os.environ.get('DATABASE_URL')
+is_vercel = bool(os.environ.get('VERCEL'))
+
+if is_vercel and not database_url:
+    raise ImproperlyConfigured('DATABASE_URL must be set in Vercel environment variables.')
 
 DATABASES = {
     'default': env.db_url('DATABASE_URL', default='sqlite:///' + str(BASE_DIR / 'db.sqlite3'))
