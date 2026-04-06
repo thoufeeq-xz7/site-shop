@@ -88,7 +88,9 @@
                     {% endif %}
                     {% if request.user.is_staff or request.user.is_superuser %}
                         <a href="{% url 'admin_dashboard' %}" class="rounded-full px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100">Admin</a>
-                    {% else %}                    {% endif %}
+                    {% else %}
+                        <a href="{% url 'admin_login' %}" class="rounded-full px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100">Admin Login</a>
+                    {% endif %}
                 </div>
             </nav>
             <div id="mobile-menu" class="card-panel mt-3 hidden px-4 py-4 md:hidden">
@@ -97,7 +99,7 @@
                     {% if request.user.is_staff or request.user.is_superuser %}
                         <a href="{% url 'admin_dashboard' %}" class="rounded-2xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100">Admin</a>
                     {% else %}
-                    {% endif %} 
+                    {% endif %}
                     <a href="{% url 'checkout' %}" class="rounded-2xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100">Cart ({{ cart_item_count }})</a>
                     {% if request.user.is_authenticated %}
                         <a href="{% url 'logout' %}" class="btn-primary mt-2">Logout</a>
