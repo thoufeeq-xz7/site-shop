@@ -35,7 +35,7 @@
                     </div>
                     <button type="submit" class="btn-primary w-full">{{ submit_label|default:'Login' }}</button>
                 </form>
-                {% if show_register_link|default:True %}
+                {% if show_register_link %}
                     <p class="mt-5 text-sm text-slate-600">New here? <a href="{% url 'register' %}" class="font-semibold text-slate-950">Create an account</a>.</p>
                 {% endif %}
                 {% if alternate_login_url %}

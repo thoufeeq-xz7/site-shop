@@ -257,7 +257,15 @@ def login_view(request):
         messages.success(request, 'You are now signed in.')
         return redirect(next_url or 'home')
 
-    return render(request, 'store/login.html', {'form': form, 'next': next_url})
+    return render(
+        request,
+        'store/login.html',
+        {
+            'form': form,
+            'next': next_url,
+            'show_register_link': True,
+        },
+    )
 
 
 def admin_login_view(request):

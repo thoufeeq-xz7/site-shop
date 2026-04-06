@@ -32,6 +32,11 @@ class StoreRouteTests(TestCase):
                 response = self.client.get(reverse(route_name))
                 self.assertEqual(response.status_code, 200)
 
+    def test_admin_login_hides_customer_signup_prompt(self):
+        response = self.client.get(reverse('admin_login'))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Create an account')
+
     def test_health_check_returns_ok(self):
         response = self.client.get(reverse('health_check'))
         self.assertEqual(response.status_code, 200)
