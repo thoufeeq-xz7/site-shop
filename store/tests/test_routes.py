@@ -18,6 +18,10 @@ class StoreRouteTests(TestCase):
             price='99.99',
             category='Testing',
         )
+        cls.user = get_user_model().objects.create_user(
+            username='route-user',
+            password='RouteUser123!',
+        )
 
     def test_home_route_uses_root_path(self):
         self.assertEqual(reverse('home'), '/')
@@ -36,6 +40,13 @@ class StoreRouteTests(TestCase):
     def test_product_detail_page_loads(self):
         response = self.client.get(reverse('product_detail', args=[self.product.pk]))
         self.assertEqual(response.status_code, 200)
+
+    def test_login_accepts_valid_credentials(self):
+        response = self.client.post(
+            reverse('login'),
+            {'username': 'route-user', 'password': 'RouteUser123!'},
+        )
+        self.assertRedirects(response, reverse('home'))
 
     def test_protected_routes_redirect_when_logged_out(self):
         for route_name in ['checkout', 'admin_dashboard', 'admin_product_list', 'admin_add_product']:
