@@ -5,7 +5,7 @@ from urllib.parse import quote
 
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth import login, logout
+from django.contrib.auth import get_user_model, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db import OperationalError, ProgrammingError
@@ -22,9 +22,51 @@ from .models import Product, ProductImage
 logger = logging.getLogger(__name__)
 
 
+def ensure_admin_user():
+    username = settings.ADMIN_DASHBOARD_USERNAME.strip()
+    password = settings.ADMIN_DASHBOARD_PASSWORD
+
+    if not username or not password:
+        logger.warning('Admin dashboard credentials are not fully configured.')
+        return None
+
+    User = get_user_model()
+    user, _created = User.objects.get_or_create(
+        username=username,
+        defaults={
+            'email': settings.ADMIN_DASHBOARD_EMAIL,
+            'is_staff': True,
+            'is_superuser': False,
+            'is_active': True,
+        },
+    )
+
+    user_dirty = False
+    if user.email != settings.ADMIN_DASHBOARD_EMAIL:
+        user.email = settings.ADMIN_DASHBOARD_EMAIL
+        user_dirty = True
+    if not user.is_staff:
+        user.is_staff = True
+        user_dirty = True
+    if not user.is_active:
+        user.is_active = True
+        user_dirty = True
+    if user.is_superuser:
+        user.is_superuser = False
+        user_dirty = True
+    if not user.check_password(password):
+        user.set_password(password)
+        user_dirty = True
+
+    if user_dirty:
+        user.save()
+
+    return user
+
+
 def admin_required(view_func):
     @wraps(view_func)
-    @login_required
+    @login_required(login_url='admin_login')
     def wrapped(request, *args, **kwargs):
         if not (request.user.is_staff or request.user.is_superuser):
             raise PermissionDenied
@@ -216,6 +258,47 @@ def login_view(request):
         return redirect(next_url or 'home')
 
     return render(request, 'store/login.html', {'form': form, 'next': next_url})
+
+
+def admin_login_view(request):
+    try:
+        ensure_admin_user()
+    except (OperationalError, ProgrammingError):
+        logger.exception('Unable to prepare the admin dashboard account.')
+
+    if request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser):
+        return redirect('admin_dashboard')
+
+    next_url = request.POST.get('next') or request.GET.get('next') or reverse('admin_dashboard')
+    if next_url and not url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+        next_url = reverse('admin_dashboard')
+
+    form = StyledAuthenticationForm(request, data=request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        user = form.get_user()
+        if user.is_staff or user.is_superuser:
+            login(request, user)
+            messages.success(request, 'Welcome back. Admin access is ready.')
+            return redirect(next_url or 'admin_dashboard')
+        form.add_error(None, 'This account does not have access to the admin dashboard.')
+
+    return render(
+        request,
+        'store/login.html',
+        {
+            'form': form,
+            'next': next_url,
+            'page_title': 'Admin Login | StupUp',
+            'eyebrow': 'Admin access',
+            'heading': 'Sign in to manage the dashboard.',
+            'description': 'Use the admin username and password configured for this store to manage products and catalogue content.',
+            'submit_label': 'Open Dashboard',
+            'show_register_link': False,
+            'alternate_login_url': reverse('login'),
+            'alternate_login_label': 'Customer login',
+            'next_message': 'You are signing in to continue to the admin dashboard.',
+        },
+    )
 
 
 @login_required

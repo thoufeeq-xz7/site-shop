@@ -131,5 +131,8 @@ LOGOUT_REDIRECT_URL = 'home'
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'hello@stupup.local'
 STORE_WHATSAPP_NUMBER = os.environ.get('STORE_WHATSAPP_NUMBER', '918301984387')
+ADMIN_DASHBOARD_USERNAME = env('ADMIN_DASHBOARD_USERNAME', default='admin')
+ADMIN_DASHBOARD_PASSWORD = env('ADMIN_DASHBOARD_PASSWORD', default='')
+ADMIN_DASHBOARD_EMAIL = env('ADMIN_DASHBOARD_EMAIL', default='admin@stupup.local')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
