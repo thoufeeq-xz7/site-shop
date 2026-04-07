@@ -16,15 +16,16 @@ from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_GET, require_POST, require_safe
 
+from store import admin
+
 from .forms import CheckoutForm, ContactForm, ProductForm, RegistrationForm, StyledAuthenticationForm
 from .models import Product, ProductImage
 
 logger = logging.getLogger(__name__)
-
-
 def ensure_admin_user():
     username = settings.ADMIN_DASHBOARD_USERNAME.strip()
     password = settings.ADMIN_DASHBOARD_PASSWORD
+
 
     if not username or not password:
         logger.warning('Admin dashboard credentials are not fully configured.')
