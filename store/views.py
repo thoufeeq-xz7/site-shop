@@ -37,7 +37,7 @@ def ensure_admin_user():
         defaults={
             'email': settings.ADMIN_DASHBOARD_EMAIL,
             'is_staff': True,
-            'is_superuser': False,
+            'is_superuser': True,
             'is_active': True,
         },
     )
