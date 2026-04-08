@@ -6,7 +6,7 @@ from django.test import TestCase
 from django.test.utils import override_settings
 from django.urls import reverse
 
-from store.models import Product
+from store.models import Product, ProductImage
 
 
 class StoreRouteTests(TestCase):
@@ -46,6 +46,17 @@ class StoreRouteTests(TestCase):
         response = self.client.get(reverse('product_detail', args=[self.product.pk]))
         self.assertEqual(response.status_code, 200)
 
+    def test_product_detail_uses_database_image_url(self):
+        ProductImage.objects.create(
+            product=self.product,
+            image='https://cdn.example.com/products/route-test-primary.jpg',
+            is_primary=True,
+        )
+
+        response = self.client.get(reverse('product_detail', args=[self.product.pk]))
+
+        self.assertContains(response, 'https://cdn.example.com/products/route-test-primary.jpg')
+
     def test_login_accepts_valid_credentials(self):
         response = self.client.post(
             reverse('login'),
@@ -81,3 +92,38 @@ class StoreRouteTests(TestCase):
         response = self.client.get(reverse('home'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'catalogue is temporarily unavailable')
+
+    def test_admin_add_product_saves_up_to_three_gallery_urls_in_database(self):
+        admin_user = get_user_model().objects.create_user(
+            username='catalog-admin',
+            password='CatalogAdmin123!',
+            is_staff=True,
+        )
+        self.client.force_login(admin_user)
+
+        response = self.client.post(
+            reverse('admin_add_product'),
+            {
+                'name': 'URL Product',
+                'description': 'Stored entirely in the database.',
+                'price': '249.99',
+                'category': 'Database',
+                'image': 'https://cdn.example.com/products/url-product-cover.jpg',
+                'gallery_image_1': 'https://cdn.example.com/products/url-product-1.jpg',
+                'gallery_image_2': 'https://cdn.example.com/products/url-product-2.jpg',
+                'gallery_image_3': 'https://cdn.example.com/products/url-product-3.jpg',
+            },
+        )
+
+        self.assertRedirects(response, reverse('admin_product_list'))
+        product = Product.objects.get(name='URL Product')
+        self.assertEqual(product.image, 'https://cdn.example.com/products/url-product-cover.jpg')
+        self.assertEqual(product.images.count(), 3)
+        self.assertEqual(
+            list(product.images.values_list('image', flat=True)),
+            [
+                'https://cdn.example.com/products/url-product-1.jpg',
+                'https://cdn.example.com/products/url-product-2.jpg',
+                'https://cdn.example.com/products/url-product-3.jpg',
+            ],
+        )

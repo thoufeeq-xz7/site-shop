@@ -57,6 +57,25 @@ class StyledAuthenticationForm(AuthenticationForm):
 
 
 class ProductForm(forms.ModelForm):
+    gallery_image_1 = forms.URLField(
+        required=False,
+        widget=forms.URLInput(
+            attrs={'class': INPUT_CLASS, 'placeholder': 'https://example.com/product-photo-1.jpg'}
+        ),
+    )
+    gallery_image_2 = forms.URLField(
+        required=False,
+        widget=forms.URLInput(
+            attrs={'class': INPUT_CLASS, 'placeholder': 'https://example.com/product-photo-2.jpg'}
+        ),
+    )
+    gallery_image_3 = forms.URLField(
+        required=False,
+        widget=forms.URLInput(
+            attrs={'class': INPUT_CLASS, 'placeholder': 'https://example.com/product-photo-3.jpg'}
+        ),
+    )
+
     class Meta:
         model = Product
         fields = ['name', 'description', 'price', 'category', 'image']
@@ -65,7 +84,7 @@ class ProductForm(forms.ModelForm):
             'description': forms.Textarea(attrs={'class': TEXTAREA_CLASS, 'placeholder': 'Write a compelling product story...'}),
             'price': forms.NumberInput(attrs={'class': INPUT_CLASS, 'placeholder': '1499', 'step': '0.01'}),
             'category': forms.TextInput(attrs={'class': INPUT_CLASS, 'placeholder': 'Apparel'}),
-            'image': forms.ClearableFileInput(attrs={'class': INPUT_CLASS}),
+            'image': forms.URLInput(attrs={'class': INPUT_CLASS, 'placeholder': 'https://example.com/cover-photo.jpg'}),
         }
 
     def clean_price(self):
@@ -73,6 +92,13 @@ class ProductForm(forms.ModelForm):
         if price <= 0:
             raise forms.ValidationError('Price must be greater than zero.')
         return price
+
+    def get_gallery_image_urls(self):
+        return [
+            self.cleaned_data[field_name].strip()
+            for field_name in ['gallery_image_1', 'gallery_image_2', 'gallery_image_3']
+            if self.cleaned_data.get(field_name)
+        ]
 
 
 class CheckoutForm(forms.Form):

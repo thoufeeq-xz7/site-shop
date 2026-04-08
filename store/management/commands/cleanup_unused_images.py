@@ -6,8 +6,12 @@ from django.core.management.base import BaseCommand
 from store.models import Product, ProductImage
 
 
+def _is_remote_reference(value):
+    return str(value).startswith(('http://', 'https://', 'data:'))
+
+
 class Command(BaseCommand):
-    help = 'List or delete unused files in media/products.'
+    help = 'List or delete unused legacy files in media/products when image paths are still stored locally.'
 
     def add_arguments(self, parser):
         parser.add_argument('--delete', action='store_true', help='Delete unused files instead of listing them.')
@@ -19,13 +23,13 @@ class Command(BaseCommand):
         referenced = {
             image_name
             for image_name in Product.objects.exclude(image='').values_list('image', flat=True)
-            if image_name
+            if image_name and not _is_remote_reference(image_name)
         }
         referenced.update(
             {
                 image_name
                 for image_name in ProductImage.objects.exclude(image='').values_list('image', flat=True)
-                if image_name
+                if image_name and not _is_remote_reference(image_name)
             }
         )
 

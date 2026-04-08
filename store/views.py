@@ -115,24 +115,30 @@ def _build_cart_items(request):
     return items, subtotal
 
 
-def _upload_product_images(product, files):
-    if not files:
+def _save_product_image_urls(product, image_urls):
+    if not image_urls:
         return
 
     has_images = product.images.exists()
-    uploaded = []
+    existing_urls = set(product.images.values_list('image', flat=True))
+    created_images = []
 
-    for index, file in enumerate(files):
-        uploaded.append(
+    for image_url in image_urls:
+        if image_url in existing_urls:
+            continue
+
+        created_images.append(
             ProductImage.objects.create(
                 product=product,
-                image=file,
-                is_primary=index == 0 and not has_images,
+                image=image_url,
+                is_primary=not has_images and not created_images,
             )
         )
+        existing_urls.add(image_url)
+        has_images = True
 
-    if uploaded and not product.images.filter(is_primary=True).exists():
-        first = uploaded[0]
+    if created_images and not product.images.filter(is_primary=True).exists():
+        first = created_images[0]
         first.is_primary = True
         first.save(update_fields=['is_primary'])
 
@@ -438,10 +444,10 @@ def admin_product_list(request):
 
 @admin_required
 def admin_add_product(request):
-    form = ProductForm(request.POST or None, request.FILES or None)
+    form = ProductForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
         product = form.save()
-        _upload_product_images(product, request.FILES.getlist('images'))
+        _save_product_image_urls(product, form.get_gallery_image_urls())
         messages.success(request, f'{product.name} created successfully.')
         return redirect('admin_product_list')
     return render(request, 'store/admin/add_product.html', {'form': form})
@@ -450,10 +456,10 @@ def admin_add_product(request):
 @admin_required
 def admin_edit_product(request, pk):
     product = get_object_or_404(Product.objects.prefetch_related('images'), pk=pk)
-    form = ProductForm(request.POST or None, request.FILES or None, instance=product)
+    form = ProductForm(request.POST or None, instance=product)
     if request.method == 'POST' and form.is_valid():
         product = form.save()
-        _upload_product_images(product, request.FILES.getlist('images'))
+        _save_product_image_urls(product, form.get_gallery_image_urls())
         messages.success(request, f'{product.name} updated successfully.')
         return redirect('admin_edit_product', pk=product.pk)
     return render(request, 'store/admin/edit_product.html', {'form': form, 'product': product})

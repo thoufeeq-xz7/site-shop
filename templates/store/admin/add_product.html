@@ -17,7 +17,7 @@
 
     <div class="grid gap-8 lg:grid-cols-[1fr_0.9fr]">
         <div class="card-panel px-6 py-7 sm:px-8">
-            <form method="post" enctype="multipart/form-data" class="space-y-5">
+            <form method="post" class="space-y-5">
                 {% csrf_token %}
                 {% if form.non_field_errors %}
                     <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
@@ -53,18 +53,37 @@
                     {% endif %}
                 </div>
                 <div>
-                    <label for="{{ form.image.id_for_label }}" class="form-label">Legacy cover image</label>
+                    <label for="{{ form.image.id_for_label }}" class="form-label">Cover image URL</label>
                     {{ form.image }}
-                    <p class="mt-2 text-xs text-slate-500">Kept for backward compatibility when no gallery images exist.</p>
+                    <p class="mt-2 text-xs text-slate-500">Saved directly in the database and used when no gallery image is set as primary.</p>
+                    {% if form.image.errors %}
+                        <p class="mt-2 text-sm text-rose-600">{{ form.image.errors|join:', ' }}</p>
+                    {% endif %}
                 </div>
                 <div>
-                    <label class="form-label">Gallery images</label>
-                    <div id="drop-zone" class="rounded-[1.75rem] border border-dashed border-slate-300 bg-stone-50 px-6 py-10 text-center">
-                        <input id="gallery-input" type="file" name="images" multiple class="hidden">
-                        <p class="text-lg font-semibold text-slate-950">Drag and drop product photos here</p>
-                        <p class="mt-2 text-sm text-slate-600">or click below to select multiple files</p>
-                        <button id="pick-files" type="button" class="btn-outline mt-5">Choose Images</button>
-                        <div id="file-list" class="mt-5 text-sm text-slate-500">No gallery images selected.</div>
+                    <label class="form-label">Gallery image URLs</label>
+                    <div class="space-y-4 rounded-[1.75rem] border border-slate-200 bg-stone-50 px-6 py-6">
+                        <div>
+                            <label for="{{ form.gallery_image_1.id_for_label }}" class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Photo 1</label>
+                            {{ form.gallery_image_1 }}
+                            {% if form.gallery_image_1.errors %}
+                                <p class="mt-2 text-sm text-rose-600">{{ form.gallery_image_1.errors|join:', ' }}</p>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <label for="{{ form.gallery_image_2.id_for_label }}" class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Photo 2</label>
+                            {{ form.gallery_image_2 }}
+                            {% if form.gallery_image_2.errors %}
+                                <p class="mt-2 text-sm text-rose-600">{{ form.gallery_image_2.errors|join:', ' }}</p>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <label for="{{ form.gallery_image_3.id_for_label }}" class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Photo 3</label>
+                            {{ form.gallery_image_3 }}
+                            {% if form.gallery_image_3.errors %}
+                                <p class="mt-2 text-sm text-rose-600">{{ form.gallery_image_3.errors|join:', ' }}</p>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
                 <button type="submit" class="btn-primary w-full">Create Product</button>
@@ -75,9 +94,9 @@
             <div class="card-panel bg-slate-950 px-6 py-7 text-white sm:px-8">
                 <p class="text-sm uppercase tracking-[0.28em] text-slate-300">Image flow</p>
                 <div class="mt-5 space-y-4 text-sm text-slate-200">
-                    <div class="rounded-2xl bg-white/10 p-4">Upload multiple photos in one pass.</div>
-                    <div class="rounded-2xl bg-white/10 p-4">The first gallery upload becomes the primary image automatically.</div>
-                    <div class="rounded-2xl bg-white/10 p-4">Unused files can be cleaned later with the management command.</div>
+                    <div class="rounded-2xl bg-white/10 p-4">Save up to 3 gallery photo URLs in one submission.</div>
+                    <div class="rounded-2xl bg-white/10 p-4">The first saved gallery URL becomes the primary image automatically.</div>
+                    <div class="rounded-2xl bg-white/10 p-4">Images now live as URL records in the database instead of uploaded media files.</div>
                 </div>
             </div>
             <div class="card-panel px-6 py-7 sm:px-8">
@@ -85,50 +104,10 @@
                 <div class="mt-5 space-y-3 text-sm leading-6 text-slate-600">
                     <p>Use a clear product name and category so filtering works well on the storefront.</p>
                     <p>Keep descriptions specific and scannable to improve the detail page.</p>
-                    <p>Add a legacy cover image only if you need compatibility with older data flows.</p>
+                    <p>Paste direct image URLs so the storefront can render them immediately.</p>
                 </div>
             </div>
         </div>
     </div>
 </section>
-{% endblock %}
-
-{% block scripts %}
-<script>
-    const galleryInput = document.getElementById('gallery-input');
-    const dropZone = document.getElementById('drop-zone');
-    const fileList = document.getElementById('file-list');
-    const pickFiles = document.getElementById('pick-files');
-
-    const renderFileList = (files) => {
-        if (!files.length) {
-            fileList.textContent = 'No gallery images selected.';
-            return;
-        }
-
-        fileList.innerHTML = Array.from(files).map((file) => `<div>${file.name}</div>`).join('');
-    };
-
-    pickFiles.addEventListener('click', () => galleryInput.click());
-    galleryInput.addEventListener('change', () => renderFileList(galleryInput.files));
-
-    ['dragenter', 'dragover'].forEach((eventName) => {
-        dropZone.addEventListener(eventName, (event) => {
-            event.preventDefault();
-            dropZone.classList.add('border-slate-900', 'bg-white');
-        });
-    });
-
-    ['dragleave', 'drop'].forEach((eventName) => {
-        dropZone.addEventListener(eventName, (event) => {
-            event.preventDefault();
-            dropZone.classList.remove('border-slate-900', 'bg-white');
-        });
-    });
-
-    dropZone.addEventListener('drop', (event) => {
-        galleryInput.files = event.dataTransfer.files;
-        renderFileList(galleryInput.files);
-    });
-</script>
 {% endblock %}

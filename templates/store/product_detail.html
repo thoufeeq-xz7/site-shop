@@ -14,13 +14,13 @@
         </div>
         <div class="mt-4 grid grid-cols-4 gap-3 sm:grid-cols-5">
             {% for gallery_image in product.images.all %}
-                <button type="button" class="thumbnail-trigger overflow-hidden rounded-2xl border border-transparent transition hover:border-slate-900" data-image="{{ gallery_image.image.url }}">
-                    <img src="{{ gallery_image.image.url }}" alt="{{ product.name }}" class="h-20 w-full object-cover sm:h-24">
+                <button type="button" class="thumbnail-trigger overflow-hidden rounded-2xl border border-transparent transition hover:border-slate-900" data-image="{{ gallery_image.image_url }}">
+                    <img src="{{ gallery_image.image_url }}" alt="{{ product.name }}" class="h-20 w-full object-cover sm:h-24">
                 </button>
             {% empty %}
                 {% if product.image %}
-                    <button type="button" class="thumbnail-trigger overflow-hidden rounded-2xl border border-slate-900 transition" data-image="{{ product.image.url }}">
-                        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="h-20 w-full object-cover sm:h-24">
+                    <button type="button" class="thumbnail-trigger overflow-hidden rounded-2xl border border-slate-900 transition" data-image="{{ product.cover_image_url }}">
+                        <img src="{{ product.cover_image_url }}" alt="{{ product.name }}" class="h-20 w-full object-cover sm:h-24">
                     </button>
                 {% endif %}
             {% endfor %}
