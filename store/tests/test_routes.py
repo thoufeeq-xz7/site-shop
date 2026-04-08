@@ -1,6 +1,9 @@
+import shutil
 from unittest.mock import patch
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import OperationalError
 from django.test import TestCase
 from django.test.utils import override_settings
@@ -126,4 +129,43 @@ class StoreRouteTests(TestCase):
                 'https://cdn.example.com/products/url-product-2.jpg',
                 'https://cdn.example.com/products/url-product-3.jpg',
             ],
+        )
+
+    def test_admin_add_product_uploads_files_and_stores_generated_urls_in_database(self):
+        admin_user = get_user_model().objects.create_user(
+            username='upload-admin',
+            password='UploadAdmin123!',
+            is_staff=True,
+        )
+        self.client.force_login(admin_user)
+
+        media_root = settings.BASE_DIR / 'test-media'
+        shutil.rmtree(media_root, ignore_errors=True)
+
+        try:
+            with override_settings(MEDIA_ROOT=media_root, MEDIA_URL='/media/'):
+                cover_file = SimpleUploadedFile('cover.jpg', b'cover-image-bytes', content_type='image/jpeg')
+                gallery_file_1 = SimpleUploadedFile('gallery-1.jpg', b'gallery-image-1', content_type='image/jpeg')
+                gallery_file_2 = SimpleUploadedFile('gallery-2.jpg', b'gallery-image-2', content_type='image/jpeg')
+
+                response = self.client.post(
+                    reverse('admin_add_product'),
+                    {
+                        'name': 'Uploaded Product',
+                        'description': 'Admin uploaded files and the app generated URLs.',
+                        'price': '399.99',
+                        'category': 'Uploads',
+                        'cover_image_file': cover_file,
+                        'gallery_image_files': [gallery_file_1, gallery_file_2],
+                    },
+                )
+        finally:
+            shutil.rmtree(media_root, ignore_errors=True)
+
+        self.assertRedirects(response, reverse('admin_product_list'))
+        product = Product.objects.get(name='Uploaded Product')
+        self.assertTrue(product.image.startswith('http://testserver/media/products/'))
+        self.assertEqual(product.images.count(), 2)
+        self.assertTrue(
+            all(image.startswith('http://testserver/media/products/') for image in product.images.values_list('image', flat=True))
         )

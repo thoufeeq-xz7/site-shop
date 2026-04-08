@@ -1,19 +1,23 @@
 from decimal import Decimal
 from functools import wraps
 import logging
+from pathlib import Path
 from urllib.parse import quote
+from uuid import uuid4
 
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login, logout
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.files.storage import default_storage
 from django.db import OperationalError, ProgrammingError
 from django.db.models import Count, Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.text import get_valid_filename
 from django.views.decorators.http import require_GET, require_POST, require_safe
 
 from store import admin
@@ -141,6 +145,24 @@ def _save_product_image_urls(product, image_urls):
         first = created_images[0]
         first.is_primary = True
         first.save(update_fields=['is_primary'])
+
+
+def _store_uploaded_image(request, uploaded_file):
+    content_type = getattr(uploaded_file, 'content_type', '')
+    if content_type and not content_type.startswith('image/'):
+        raise ValidationError(f'{uploaded_file.name} must be an image file.')
+
+    file_stem = get_valid_filename(Path(uploaded_file.name).stem) or 'product-image'
+    extension = Path(uploaded_file.name).suffix.lower()
+    storage_name = default_storage.save(f'products/{file_stem}-{uuid4().hex}{extension}', uploaded_file)
+    return request.build_absolute_uri(default_storage.url(storage_name))
+
+
+def _store_uploaded_images(request, uploaded_files, limit=3):
+    files = [file for file in uploaded_files if file]
+    if len(files) > limit:
+        raise ValidationError(f'Upload up to {limit} gallery images at a time.')
+    return [_store_uploaded_image(request, file) for file in files]
 
 
 def _build_whatsapp_order(items, subtotal, form):
@@ -446,10 +468,28 @@ def admin_product_list(request):
 def admin_add_product(request):
     form = ProductForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
-        product = form.save()
-        _save_product_image_urls(product, form.get_gallery_image_urls())
-        messages.success(request, f'{product.name} created successfully.')
-        return redirect('admin_product_list')
+        try:
+            uploaded_cover_url = ''
+            if request.FILES.get('cover_image_file'):
+                uploaded_cover_url = _store_uploaded_image(request, request.FILES['cover_image_file'])
+
+            gallery_urls = form.get_gallery_image_urls()
+            uploaded_gallery_urls = _store_uploaded_images(
+                request, request.FILES.getlist('gallery_image_files')
+            )
+
+            if gallery_urls and uploaded_gallery_urls and len(gallery_urls) + len(uploaded_gallery_urls) > 3:
+                raise ValidationError('Add up to 3 gallery images per submission across URLs and uploads.')
+        except ValidationError as exc:
+            form.add_error(None, exc.messages[0])
+        else:
+            product = form.save(commit=False)
+            if uploaded_cover_url:
+                product.image = uploaded_cover_url
+            product.save()
+            _save_product_image_urls(product, gallery_urls + uploaded_gallery_urls)
+            messages.success(request, f'{product.name} created successfully.')
+            return redirect('admin_product_list')
     return render(request, 'store/admin/add_product.html', {'form': form})
 
 
@@ -458,10 +498,28 @@ def admin_edit_product(request, pk):
     product = get_object_or_404(Product.objects.prefetch_related('images'), pk=pk)
     form = ProductForm(request.POST or None, instance=product)
     if request.method == 'POST' and form.is_valid():
-        product = form.save()
-        _save_product_image_urls(product, form.get_gallery_image_urls())
-        messages.success(request, f'{product.name} updated successfully.')
-        return redirect('admin_edit_product', pk=product.pk)
+        try:
+            uploaded_cover_url = ''
+            if request.FILES.get('cover_image_file'):
+                uploaded_cover_url = _store_uploaded_image(request, request.FILES['cover_image_file'])
+
+            gallery_urls = form.get_gallery_image_urls()
+            uploaded_gallery_urls = _store_uploaded_images(
+                request, request.FILES.getlist('gallery_image_files')
+            )
+
+            if gallery_urls and uploaded_gallery_urls and len(gallery_urls) + len(uploaded_gallery_urls) > 3:
+                raise ValidationError('Add up to 3 gallery images per submission across URLs and uploads.')
+        except ValidationError as exc:
+            form.add_error(None, exc.messages[0])
+        else:
+            product = form.save(commit=False)
+            if uploaded_cover_url:
+                product.image = uploaded_cover_url
+            product.save()
+            _save_product_image_urls(product, gallery_urls + uploaded_gallery_urls)
+            messages.success(request, f'{product.name} updated successfully.')
+            return redirect('admin_edit_product', pk=product.pk)
     return render(request, 'store/admin/edit_product.html', {'form': form, 'product': product})
 
 
