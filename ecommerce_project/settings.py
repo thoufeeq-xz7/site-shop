@@ -86,15 +86,39 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ecommerce_project.wsgi.application'
 
-database_url = os.environ.get('DATABASE_URL')
+database_url = env('DATABASE_URL', default='').strip()
 is_vercel = bool(os.environ.get('VERCEL'))
 
-if is_vercel and not database_url:
-    raise ImproperlyConfigured('DATABASE_URL must be set in Vercel environment variables.')
+if database_url:
+    DATABASES = {
+        'default': env.db('DATABASE_URL'),
+    }
+elif all(
+    env(var_name, default='').strip()
+    for var_name in ['DB_NAME', 'DB_USER', 'DB_PASSWORD', 'DB_HOST']
+):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': env('DB_NAME'),
+            'USER': env('DB_USER'),
+            'PASSWORD': env('DB_PASSWORD'),
+            'HOST': env('DB_HOST'),
+            'PORT': env('DB_PORT', default='5432'),
+        }
+    }
+else:
+    if is_vercel:
+        raise ImproperlyConfigured(
+            'Set DATABASE_URL or the DB_NAME/DB_USER/DB_PASSWORD/DB_HOST env vars in Vercel.'
+        )
 
-DATABASES = {
-    'default': env.db_url('DATABASE_URL', default='sqlite:///' + str(BASE_DIR / 'db.sqlite3'))
-}
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -137,4 +161,3 @@ ADMIN_DASHBOARD_PASSWORD = env('ADMIN_DASHBOARD_PASSWORD', default='StupUpAdmin@
 ADMIN_DASHBOARD_EMAIL = env('ADMIN_DASHBOARD_EMAIL', default='admin@stupup.local')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-    
