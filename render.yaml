@@ -10,5 +10,11 @@ services:
         value: "false"
       - key: ALLOWED_HOSTS
         value: "stupup.onrender.com,.onrender.com,127.0.0.1,localhost"
+      - key: MEDIA_ROOT
+        value: "/var/data/media"
       - key: SECRET_KEY
         generateValue: true
+    disks:
+      - name: media
+        mountPath: /var/data
+        sizeGB: 1
